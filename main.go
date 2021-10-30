@@ -14,7 +14,7 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
-	hh := handlers.NewHello(l)
+	ph := handlers.NewProducts(l)
 
 	/*
 		servemux stands for Http request multiplexer
@@ -22,7 +22,7 @@ func main() {
 		and calls the handler for the pattern that most closely matches the URL
 	*/
 	sm := http.NewServeMux()
-	sm.Handle("/", hh)
+	sm.Handle("/", ph)
 
 	//Defining server struct
 	s := &http.Server{
