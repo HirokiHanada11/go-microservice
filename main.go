@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/HirokiHanada11/go-microservices/handlers"
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -21,8 +22,22 @@ func main() {
 		it matches the URL of each coming request against a list of registered patterns
 		and calls the handler for the pattern that most closely matches the URL
 	*/
-	sm := http.NewServeMux()
-	sm.Handle("/", ph)
+
+	// creating server (serve mux) with gorilla mux library
+	// mux simplifies the process of taking parameters from URL
+	sm := mux.NewRouter()
+
+	// defining method specific subrouters
+	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	getRouter.HandleFunc("/", ph.GetProducts)
+
+	putRouter := sm.Methods(http.MethodPut).Subrouter()
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProducts) // regex can be used directly inside of the URL, and it autmatically does the matching
+	putRouter.Use(ph.MiddlewareProductValidation)
+
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("/", ph.AddProduct)
+	postRouter.Use(ph.MiddlewareProductValidation)
 
 	//Defining server struct
 	s := &http.Server{
