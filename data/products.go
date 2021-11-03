@@ -14,6 +14,7 @@ import (
 	`json:""` is a struct tag which specifies the format of the struct when encoded to json
 	Product defines the structure for an API product
 */
+
 type Product struct {
 	ID          int     `json:"id"`
 	Name        string  `json:"name" validate:"required"`
@@ -36,11 +37,7 @@ func validateSKU(fl validator.FieldLevel) bool {
 	re := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
 	matches := re.FindAllString(fl.Field().String(), -1) //-1 extracts all matches
 
-	if len(matches) == 1 {
-		return true
-	}
-
-	return false
+	return len(matches) == 1
 }
 
 type Products []*Product //array of products
@@ -77,6 +74,30 @@ func UpdateProduct(id int, p *Product) error {
 	productList[pos] = p
 
 	return nil
+}
+
+// DeleteProduct deletes a product from the database
+func DeleteProduct(id int) error {
+	i := findIndexByProductID(id)
+	if i == -1 {
+		return ErrProductNotFound
+	}
+
+	productList = append(productList[:i], productList[i+1])
+
+	return nil
+}
+
+// findIndex finds the index of a product in the database
+// returns -1 when no product can be found
+func findIndexByProductID(id int) int {
+	for i, p := range productList {
+		if p.ID == id {
+			return i
+		}
+	}
+
+	return -1
 }
 
 var ErrProductNotFound = fmt.Errorf("Product not found")

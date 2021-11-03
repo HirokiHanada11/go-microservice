@@ -1,3 +1,17 @@
+// Package classification of Product API
+//
+// Documentation for Product API
+//
+// Schemes: http
+// BasePath: /
+// Version: 1/0.0
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+// swagger:meta
 package handlers
 
 import (
@@ -5,11 +19,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/HirokiHanada11/go-microservices/data"
-	"github.com/gorilla/mux"
 )
+
+// A list of products returns in the response
+// swagger:response productsResponse
+type productsResponseWrapper struct {
+	// All products in the system
+	// in: body
+	Body []data.Product
+}
 
 type Products struct {
 	l *log.Logger
@@ -17,55 +37,6 @@ type Products struct {
 
 func NewProducts(l *log.Logger) *Products {
 	return &Products{l}
-}
-
-// json.Marshal returns json encoded struct.
-// lp is a list of products and it has method ToJSON,
-// which writes encoded json to specified io writer, response writer in this case.
-// this method is slightly faster as it does not have to allocate any memory for the json encoded data
-
-func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
-	lp := data.GetProducts()
-	// d, err := json.Marshal(lp)
-	err := lp.ToJSON(rw)
-	if err != nil {
-		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
-	}
-}
-
-func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle POST product")
-
-	// recieve the validated data from the middleware using context value
-	// .() casts data into the format
-	prod := r.Context().Value(KeyProduct{}).(data.Product)
-
-	data.AddProduct(&prod)
-}
-
-func (p Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
-	// retrieve the URL parameter from the mux subrouter for put
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(rw, "Unable to convert id", http.StatusBadRequest)
-	}
-
-	p.l.Println("Handle PUT product", id)
-
-	prod := r.Context().Value(KeyProduct{}).(data.Product)
-
-	err = data.UpdateProduct(id, &prod)
-
-	if err == data.ErrProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
-		return
-	}
-
-	if err != nil {
-		http.Error(rw, "Product not found", http.StatusInternalServerError)
-		return
-	}
 }
 
 // an empty struct to be used as a key for passing data from middleware through contex
