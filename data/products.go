@@ -1,63 +1,66 @@
 package data
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"regexp"
-	"time"
-
-	"github.com/go-playground/validator"
 )
+
+var ErrProductNotFound = fmt.Errorf("Product not found")
 
 /*
 	`json:""` is a struct tag which specifies the format of the struct when encoded to json
 	Product defines the structure for an API product
 */
 
+// swagger:model
 type Product struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name" validate:"required"`
-	Description string  `json:"description"`
-	Price       float32 `json:"price" validate:"gt=0"`
-	SKU         string  `json:"sku" validate:"required,sku"`
-	CreatedOn   string  `json:"-"`
-	UpdatedOn   string  `json:"-"`
-	DeletedOn   string  `json:"-"`
-}
+	// the id for the product
+	//
+	// required: false
+	// min: 1
+	ID int `json:"id"` // Unique identifier for the product
 
-func (p *Product) Validate() error {
-	validate := validator.New()
-	validate.RegisterValidation("sku", validateSKU) // defines a custom validation tag
-	return validate.Struct(p)
-}
+	// the name for this poduct
+	//
+	// required: true
+	// max length: 255
+	Name string `json:"name" validate:"required"`
 
-func validateSKU(fl validator.FieldLevel) bool {
-	//  sku is of format abc-abc-sdfsf
-	re := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
-	matches := re.FindAllString(fl.Field().String(), -1) //-1 extracts all matches
+	// the description for this poduct
+	//
+	// required: false
+	// max length: 10000
+	Description string `json:"description"`
 
-	return len(matches) == 1
+	// the price for the product
+	//
+	// required: true
+	// min: 0.01
+	Price float32 `json:"price" validate:"required,gt=0"`
+
+	// the SKU for the product
+	//
+	// required: true
+	// pattern: [a-z]+-[a-z]+-[a-z]+
+	SKU string `json:"sku" validate:"sku"`
 }
 
 type Products []*Product //array of products
 
-// decodes json to product struct
-// takes io reader as a parameter (Response Body) and returns an error
-func (p *Product) FromJSON(r io.Reader) error {
-	e := json.NewDecoder(r)
-	return e.Decode(p)
-}
-
-// encodes products struct to json
-func (p *Products) ToJSON(w io.Writer) error {
-	e := json.NewEncoder(w) //creates new encoder with io writer input
-	return e.Encode(p)
-}
-
 // 	it is cleaner to write CRUD methods with the data
 func GetProducts() Products {
 	return productList
+}
+
+// GetProductByID returns a single product which matches the id from the
+// database.
+// If a product is not found this function returns a ProductNotFound error
+func GetProductByID(id int) (*Product, error) {
+	i := findIndexByProductID(id)
+	if id == -1 {
+		return nil, ErrProductNotFound
+	}
+
+	return productList[i], nil
 }
 
 func AddProduct(p *Product) {
@@ -100,8 +103,6 @@ func findIndexByProductID(id int) int {
 	return -1
 }
 
-var ErrProductNotFound = fmt.Errorf("Product not found")
-
 func findProduct(id int) (*Product, int, error) {
 	for i, p := range productList {
 		if p.ID == id {
@@ -124,8 +125,6 @@ var productList = []*Product{
 		Description: "Flothy mily coffe",
 		Price:       4.55,
 		SKU:         "abc123",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
 	},
 	{
 		ID:          2,
@@ -133,7 +132,5 @@ var productList = []*Product{
 		Description: "Short and strong coffee without milk",
 		Price:       2.50,
 		SKU:         "efg456",
-		CreatedOn:   time.Now().UTC().String(),
-		UpdatedOn:   time.Now().UTC().String(),
 	},
 }

@@ -8,10 +8,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// swagger:route GET /products products listProducts
-// Returns a list of products
+// swagger:route PUT /products products updateProduct
+// Update a products details
+//
 // responses:
-//  200: productsResponse
+//	201: noContentResponse
+//  404: errorResponse
+//  422: errorValidation
 
 // GetProducts returns the products from the data store
 

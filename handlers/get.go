@@ -7,22 +7,57 @@ import (
 )
 
 // swagger:route GET /products products listProducts
-// Returns a list of products
+// Return a list of products from the database
 // responses:
-//  200: productsResponse
+//	200: productsResponse
 
-// GetProducts returns the products from the data store
-func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
-	lp := data.GetProducts()
-	// d, err := json.Marshal(lp)
-	err := lp.ToJSON(rw)
+// ListAll handles GET requests and returns all current products
+func (p *Products) ListAll(rw http.ResponseWriter, r *http.Request) {
+	p.l.Println("[DEBUG] get all records")
+
+	prods := data.GetProducts()
+
+	err := data.ToJSON(prods, rw)
 	if err != nil {
-		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
+		// we should never be here but log the error just incase
+		p.l.Println("[ERROR] serializing product", err)
 	}
 }
 
-// *** DEV NOTES ***
-// json.Marshal returns json encoded struct.
-// lp is a list of products and it has method ToJSON,
-// which writes encoded json to specified io writer, response writer in this case.
-// this method is slightly faster as it does not have to allocate any memory for the json encoded data
+// swagger:route GET /products/{id} products listSingle
+// Return a list of products from the database
+// responses:
+//	200: productResponse
+//	404: errorResponse
+
+// ListSingle handles GET requests
+func (p *Products) ListSingle(rw http.ResponseWriter, r *http.Request) {
+	id := getProductID(r)
+
+	p.l.Println("[DEBUG] get record id", id)
+
+	prod, err := data.GetProductByID(id)
+
+	switch err {
+	case nil:
+
+	case data.ErrProductNotFound:
+		p.l.Println("[ERROR] fetching product", err)
+
+		rw.WriteHeader(http.StatusNotFound)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		return
+	default:
+		p.l.Println("[ERROR] fetching product", err)
+
+		rw.WriteHeader(http.StatusInternalServerError)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
+		return
+	}
+
+	err = data.ToJSON(prod, rw)
+	if err != nil {
+		// we should never be here but log the error just incase
+		p.l.Println("[ERROR] serializing product", err)
+	}
+}

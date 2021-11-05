@@ -6,11 +6,15 @@ import (
 	"github.com/HirokiHanada11/go-microservices/data"
 )
 
-// swagger:route GET /products products listProducts
-// Returns a list of products
+// swagger:route POST /products products createProduct
+// Create a new product
+//
 // responses:
-//  200: productsResponse
+//	200: productResponse
+//  422: errorValidation
+//  501: errorResponse
 
+// Create handles POST requests to add new products
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle POST product")
 

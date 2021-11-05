@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/HirokiHanada11/go-microservices/data"
 	"github.com/HirokiHanada11/go-microservices/handlers"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
@@ -16,7 +17,9 @@ import (
 
 func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
-	ph := handlers.NewProducts(l)
+	v := data.NewValidation()
+
+	ph := handlers.NewProducts(l, v)
 
 	/*
 		servemux stands for Http request multiplexer
@@ -29,16 +32,17 @@ func main() {
 	sm := mux.NewRouter()
 
 	// defining method specific subrouters
-	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", ph.GetProducts)
+	getR := sm.Methods(http.MethodGet).Subrouter()
+	getR.HandleFunc("/products", ph.ListAll)
+	getR.HandleFunc("/products/{id:[0-9]+}", ph.ListSingle)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
 	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProducts) // regex can be used directly inside of the URL, and it autmatically does the matching
-	putRouter.Use(ph.MiddlewareProductValidation)
+	putRouter.Use(ph.MiddlewareValidateProduct)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
 	postRouter.HandleFunc("/", ph.AddProduct)
-	postRouter.Use(ph.MiddlewareProductValidation)
+	postRouter.Use(ph.MiddlewareValidateProduct)
 
 	deleteRouter := sm.Methods(http.MethodDelete).Subrouter()
 	deleteRouter.HandleFunc("/{id:[0-9]+}", ph.DeleteProduct)
@@ -46,8 +50,8 @@ func main() {
 	ops := middleware.RedocOpts{SpecURL: "/swagger.yaml"} //this package creates API Documentation UI
 	sh := middleware.Redoc(ops, nil)
 
-	getRouter.Handle("/docs", sh)
-	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./"))) //serves files inside the directory matching URL path
+	getR.Handle("/docs", sh)
+	getR.Handle("/swagger.yaml", http.FileServer(http.Dir("./"))) //serves files inside the directory matching URL path
 
 	//Defining server struct
 	s := &http.Server{
