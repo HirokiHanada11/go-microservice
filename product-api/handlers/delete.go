@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/HirokiHanada11/go-microservices/data"
+	"github.com/HirokiHanada11/go-microservices/product-api/data"
 	"github.com/gorilla/mux"
 )
 
 // swagger:route DELETE /products/{id} products deleteProduct
 // Returns no content
 // responses:
-//  201: noContent
+//  201: noContentResponse
 
 // DeleteProduct deletes product from a database
 func (p Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {

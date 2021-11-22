@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HirokiHanada11/go-microservices/data"
-	"github.com/HirokiHanada11/go-microservices/handlers"
+	"github.com/HirokiHanada11/go-microservices/product-api/data"
+	"github.com/HirokiHanada11/go-microservices/product-api/handlers"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/HirokiHanada11/go-microservices/data"
+	"github.com/HirokiHanada11/go-microservices/product-api/data"
 )
 
 // MiddlewareValidateProduct validates the product in the request and calls next if ok

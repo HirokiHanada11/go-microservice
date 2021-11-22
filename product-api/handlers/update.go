@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/HirokiHanada11/go-microservices/data"
+	"github.com/HirokiHanada11/go-microservices/product-api/data"
 	"github.com/gorilla/mux"
 )
 
-// swagger:route PUT /products products updateProduct
+// swagger:route PUT /products/{id} products updateProduct
 // Update a products details
 //
 // responses:
