@@ -12,6 +12,7 @@ import (
 	"github.com/HirokiHanada11/go-microservices/product-api/data"
 	"github.com/HirokiHanada11/go-microservices/product-api/handlers"
 	"github.com/go-openapi/runtime/middleware"
+	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -53,10 +54,13 @@ func main() {
 	getR.Handle("/docs", sh)
 	getR.Handle("/swagger.yaml", http.FileServer(http.Dir("./"))) //serves files inside the directory matching URL path
 
+	//CORS using the gorilla handlers
+	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"http://localhost:3000"}))
+
 	//Defining server struct
 	s := &http.Server{
 		Addr:         ":9090",           //address of the server to run on
-		Handler:      sm,                //specify handler
+		Handler:      ch(sm),            //specify handler
 		IdleTimeout:  120 * time.Second, //timeout for the tcp connections to stay idle
 		ReadTimeout:  1 * time.Second,   //max read time
 		WriteTimeout: 1 * time.Second,   //max write time
