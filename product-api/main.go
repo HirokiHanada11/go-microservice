@@ -9,18 +9,31 @@ import (
 	"syscall"
 	"time"
 
+	protos "github.com/HirokiHanada11/go-microservices/currency/protos"
 	"github.com/HirokiHanada11/go-microservices/product-api/data"
 	"github.com/HirokiHanada11/go-microservices/product-api/handlers"
 	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 func main() {
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
 	v := data.NewValidation()
 
-	ph := handlers.NewProducts(l, v)
+	// define a grpc connection
+	conn, err := grpc.Dial("localhost:9092", grpc.WithInsecure())
+	if err != nil {
+		panic(err)
+	}
+
+	defer conn.Close()
+
+	// create a grpc client for currency service
+	cc := protos.NewCurrencyClient(conn)
+
+	ph := handlers.NewProducts(l, v, cc)
 
 	/*
 		servemux stands for Http request multiplexer
