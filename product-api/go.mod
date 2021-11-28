@@ -49,3 +49,5 @@ require (
 replace github.com/HirokiHanada11/go-microservices/client => ../client
 
 replace github.com/HirokiHanada11/go-microservices/currency => ../currency
+
+replace github.com/HirokiHanada11/go-microservices/currency/protos => ../currency
