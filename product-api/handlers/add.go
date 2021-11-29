@@ -16,11 +16,12 @@ import (
 
 // Create handles POST requests to add new products
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle POST product")
 
 	// recieve the validated data from the middleware using context value
 	// .() casts data into the format
 	prod := r.Context().Value(KeyProduct{}).(data.Product)
 
-	data.AddProduct(&prod)
+	p.l.Debug("Adding product %#v\n", prod)
+
+	p.productDB.AddProduct(prod)
 }

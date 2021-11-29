@@ -26,19 +26,26 @@ func (p Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Unable to convert id", http.StatusBadRequest)
 	}
 
-	p.l.Println("Handle PUT product", id)
+	p.l.Debug("Updating product", "id", id)
 
 	prod := r.Context().Value(KeyProduct{}).(data.Product)
 
-	err = data.UpdateProduct(id, &prod)
+	err = p.productDB.UpdateProduct(prod)
 
-	if err == data.ErrProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
+	switch err {
+	case nil:
+
+	case data.ErrProductNotFound:
+		p.l.Error("Unable to delete product", "error", err)
+
+		rw.WriteHeader(http.StatusNotFound)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
-	}
+	default:
+		p.l.Error("Unable to delete product", "error", err)
 
-	if err != nil {
-		http.Error(rw, "Product not found", http.StatusInternalServerError)
+		rw.WriteHeader(http.StatusInternalServerError)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
 }

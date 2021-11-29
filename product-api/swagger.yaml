@@ -9,7 +9,7 @@ definitions:
         type: string
         x-go-name: Message
     type: object
-    x-go-package: github.com/HirokiHanada11/go-microservices/handlers
+    x-go-package: github.com/HirokiHanada11/go-microservices/product-api/handlers
   Product:
     properties:
       description:
@@ -30,7 +30,7 @@ definitions:
         x-go-name: Name
       price:
         description: the price for the product
-        format: float
+        format: double
         minimum: 0.01
         type: number
         x-go-name: Price
@@ -44,7 +44,7 @@ definitions:
     - price
     - sku
     type: object
-    x-go-package: github.com/HirokiHanada11/go-microservices/data
+    x-go-package: github.com/HirokiHanada11/go-microservices/product-api/data
   ValidationError:
     description: ValidationError is a collection of validation error messages
     properties:
@@ -54,7 +54,7 @@ definitions:
         type: array
         x-go-name: Messages
     type: object
-    x-go-package: github.com/HirokiHanada11/go-microservices/handlers
+    x-go-package: github.com/HirokiHanada11/go-microservices/product-api/handlers
 info:
   description: Documentation for Product API
   title: of Product API
@@ -64,6 +64,13 @@ paths:
     get:
       description: Return a list of products from the database
       operationId: listProducts
+      parameters:
+      - description: |-
+          Currency used when returning the price of the product,
+          when not specified currency is return in GBP.
+        in: query
+        name: Currency
+        type: string
       responses:
         "200":
           $ref: '#/responses/productsResponse'
@@ -111,6 +118,12 @@ paths:
       description: Return a list of products from the database
       operationId: listSingleProduct
       parameters:
+      - description: |-
+          Currency used when returning the price of the product,
+          when not specified currency is return in GBP.
+        in: query
+        name: Currency
+        type: string
       - description: The id of the product for which the operation relates
         format: int64
         in: path

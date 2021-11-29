@@ -2,13 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
-	protos "github.com/HirokiHanada11/go-microservices/currency/protos"
 	"github.com/HirokiHanada11/go-microservices/product-api/data"
 	"github.com/gorilla/mux"
+	"github.com/hashicorp/go-hclog"
 )
 
 // an empty struct to be used as a key for passing data from middleware through contex
@@ -16,13 +15,13 @@ import (
 type KeyProduct struct{}
 
 type Products struct {
-	l  *log.Logger
-	v  *data.Validation
-	cc protos.CurrencyClient
+	l         hclog.Logger
+	v         *data.Validation
+	productDB *data.ProductsDB
 }
 
-func NewProducts(l *log.Logger, v *data.Validation, cc protos.CurrencyClient) *Products {
-	return &Products{l, v, cc}
+func NewProducts(l hclog.Logger, v *data.Validation, pdb *data.ProductsDB) *Products {
+	return &Products{l, v, pdb}
 }
 
 // ErrInvalidProductPath is an error message when the product path is not valid

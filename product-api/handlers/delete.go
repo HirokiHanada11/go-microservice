@@ -19,17 +19,24 @@ func (p Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
-	p.l.Println("Handle PUT product", id)
+	p.l.Debug("Deleting product", "id", id)
 
-	err := data.DeleteProduct(id)
+	err := p.productDB.DeleteProduct(id)
 
-	if err == data.ErrProductNotFound {
-		http.Error(rw, "Product not found", http.StatusNotFound)
+	switch err {
+	case nil:
+
+	case data.ErrProductNotFound:
+		p.l.Error("Unable to delete product", "error", err)
+
+		rw.WriteHeader(http.StatusNotFound)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
-	}
+	default:
+		p.l.Error("Unable to delete product", "error", err)
 
-	if err != nil {
-		http.Error(rw, "Product not found", http.StatusInternalServerError)
+		rw.WriteHeader(http.StatusInternalServerError)
+		data.ToJSON(&GenericError{Message: err.Error()}, rw)
 		return
 	}
 }
