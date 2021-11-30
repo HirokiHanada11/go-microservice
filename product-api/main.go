@@ -32,7 +32,7 @@ func main() {
 
 	// create a grpc client for currency service
 	cc := protos.NewCurrencyClient(conn)
-	db := data.NewProductDB(cc, l)
+	db := data.NewProductsDB(cc, l)
 
 	ph := handlers.NewProducts(l, v, db)
 

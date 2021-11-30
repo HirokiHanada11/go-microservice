@@ -54,10 +54,37 @@ type Products []*Product //array of products
 type ProductsDB struct {
 	currency protos.CurrencyClient
 	log      hclog.Logger
+	rates    map[string]float64
+	client   protos.Currency_SubscribeRatesClient
 }
 
-func NewProductDB(c protos.CurrencyClient, l hclog.Logger) *ProductsDB {
-	return &ProductsDB{c, l}
+func NewProductsDB(c protos.CurrencyClient, l hclog.Logger) *ProductsDB {
+	pb := &ProductsDB{c, l, make(map[string]float64), nil}
+	go pb.handleUpdates()
+
+	return pb
+}
+
+func (p *ProductsDB) handleUpdates() {
+	sub, err := p.currency.SubscribeRates(context.Background())
+	if err != nil {
+		p.log.Error("Unable to subscribe for rates", "error", err)
+		return
+	}
+
+	p.client = sub
+
+	for {
+		rr, err := sub.Recv()
+		p.log.Info("Recieved updated rate from server", "dest", rr.GetDestination().String())
+
+		if err != nil {
+			p.log.Error("Error receiving message", "error", err)
+			return
+		}
+
+		p.rates[rr.Destination.String()] = rr.Rate
+	}
 }
 
 // 	it is cleaner to write CRUD methods with the data
@@ -150,13 +177,23 @@ func findIndexByProductID(id int) int {
 }
 
 func (p *ProductsDB) getRate(destination string) (float64, error) {
+	if r, ok := p.rates[destination]; ok {
+		return r, nil
+	}
+
 	// get exchange rate
 	rr := &protos.RateRequest{
 		Base:        protos.Currencies(protos.Currencies_value["EUR"]),
 		Destination: protos.Currencies(protos.Currencies_value[destination]),
 	}
 
+	// get initial rates
 	resp, err := p.currency.GetRate(context.Background(), rr)
+	p.rates[destination] = resp.Rate
+
+	// subscribe for updates
+	p.client.Send(rr)
+
 	return resp.Rate, err
 }
 
